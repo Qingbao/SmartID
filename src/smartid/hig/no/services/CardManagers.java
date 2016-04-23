@@ -15,10 +15,12 @@ import net.sourceforge.scuba.smartcards.CardTerminalListener;
 
 /**
  * Manages insertions and removals.
- * 
+ *
  */
 public class CardManagers {
+
 	private enum CardType {
+
 		OTHER_CARD, PASSWD_CARD
 	};
 
@@ -43,6 +45,7 @@ public class CardManagers {
 				try {
 					BasicService bService = new BasicService(service);
 					bService.open(); /* Selects applet... */
+
 					cardTypes.put(service, CardType.PASSWD_CARD);
 					smartIDServices.put(service, bService);
 					final CardActionEvents ces = new CardActionEvents(CardActionEvents.INSERTED,
@@ -85,12 +88,12 @@ public class CardManagers {
 			(new Thread(new Runnable() {
 				public void run() {
 					switch (ce.getType()) {
-					case CardEvent.INSERTED:
-						l.cardInserted(ce);
-						break;
-					case CardEvent.REMOVED:
-						l.cardRemoved(ce);
-						break;
+						case CardEvent.INSERTED:
+							l.cardInserted(ce);
+							break;
+						case CardEvent.REMOVED:
+							l.cardRemoved(ce);
+							break;
 					}
 				}
 			})).start();
@@ -102,12 +105,12 @@ public class CardManagers {
 			(new Thread(new Runnable() {
 				public void run() {
 					switch (cae.getType()) {
-					case CardActionEvents.INSERTED:
-						l.SmartIDCardInserted(cae);
-						break;
-					case CardActionEvents.REMOVED:
-						l.SmartIDCardRemoved(cae);
-						break;
+						case CardActionEvents.INSERTED:
+							l.SmartIDCardInserted(cae);
+							break;
+						case CardActionEvents.REMOVED:
+							l.SmartIDCardRemoved(cae);
+							break;
 					}
 				}
 			})).start();

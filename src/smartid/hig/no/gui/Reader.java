@@ -61,11 +61,11 @@ import smartid.hig.no.utils.GUIutil;
 
 /**
  * A simple GUI application to read out SmartID card. Which has the following
- * characteristics: DG1, DG2 (EAC protected), DG3, DG4 (EAC protected), DG15 (Active
- * Authentication), DG14 (Chip Authentication). DGCOM AND DGSOD
- * 
- * 
- * 
+ * characteristics: DG1, DG2 (EAC protected), DG3, DG4 (EAC protected), DG15
+ * (Active Authentication), DG14 (Chip Authentication). DGCOM AND DGSOD
+ *
+ *
+ *
  */
 public class Reader extends JFrame implements ActionListener, APDUListener {
 
@@ -112,7 +112,7 @@ public class Reader extends JFrame implements ActionListener, APDUListener {
 	private DG_2_FILE dg2file = null;
 
 	private DG_3_FILE dg3file = null;
-	
+
 	private DG_4_FILE dg4file = null;
 
 	private DG_14_FILE dg14file = null;
@@ -185,11 +185,9 @@ public class Reader extends JFrame implements ActionListener, APDUListener {
 		}
 
 		// basic data:
-
 		DataPanel = new DataPanel(this, ins, false);
 
 		// Picture
-
 		picturesPane = new JTabbedPane();
 
 		JPanel picPanel = new JPanel();
@@ -323,32 +321,32 @@ public class Reader extends JFrame implements ActionListener, APDUListener {
 					.setFileFilter(net.sourceforge.scuba.util.Files.ZIP_FILE_FILTER);
 			int choice = fileChooser.showSaveDialog(getContentPane());
 			switch (choice) {
-			case JFileChooser.APPROVE_OPTION:
-				try {
-					File file = fileChooser.getSelectedFile();
-					FileOutputStream fileOut = new FileOutputStream(file);
-					ZipOutputStream zipOut = new ZipOutputStream(fileOut);
-					for (short fid : smartID.getFileList()) {
-						String entryName = Hex.shortToHexString(fid) + ".bin";
-						InputStream dg = smartID.getInputStream(fid);
-						zipOut.putNextEntry(new ZipEntry(entryName));
-						int bytesRead;
-						byte[] dgBytes = new byte[1024];
-						while ((bytesRead = dg.read(dgBytes)) > 0) {
-							zipOut.write(dgBytes, 0, bytesRead);
+				case JFileChooser.APPROVE_OPTION:
+					try {
+						File file = fileChooser.getSelectedFile();
+						FileOutputStream fileOut = new FileOutputStream(file);
+						ZipOutputStream zipOut = new ZipOutputStream(fileOut);
+						for (short fid : smartID.getFileList()) {
+							String entryName = Hex.shortToHexString(fid) + ".bin";
+							InputStream dg = smartID.getInputStream(fid);
+							zipOut.putNextEntry(new ZipEntry(entryName));
+							int bytesRead;
+							byte[] dgBytes = new byte[1024];
+							while ((bytesRead = dg.read(dgBytes)) > 0) {
+								zipOut.write(dgBytes, 0, bytesRead);
+							}
+							zipOut.closeEntry();
 						}
-						zipOut.closeEntry();
+						zipOut.finish();
+						zipOut.close();
+						fileOut.flush();
+						fileOut.close();
+						break;
+					} catch (IOException fnfe) {
+						fnfe.printStackTrace();
 					}
-					zipOut.finish();
-					zipOut.close();
-					fileOut.flush();
-					fileOut.close();
+				default:
 					break;
-				} catch (IOException fnfe) {
-					fnfe.printStackTrace();
-				}
-			default:
-				break;
 			}
 		} else if (VIEWDOCCERT.equals(e.getActionCommand())) {
 			try {
@@ -535,8 +533,9 @@ public class Reader extends JFrame implements ActionListener, APDUListener {
 							&& smartID.getEACFiles().contains(fid)) {
 						continue;
 					} else {
-						if (exc != null)
+						if (exc != null) {
 							throw exc;
+						}
 					}
 
 					byte[] buf = new byte[4096];
@@ -551,10 +550,10 @@ public class Reader extends JFrame implements ActionListener, APDUListener {
 					if (!Arrays.equals(storedHash, computedHash)) {
 						statusBar.setPAFail("Authentication of DG" + dgNumber
 								+ " failed");
-						
-					}	
+
+					}
 					securityInfo.append("DG: " + dgNumber + " Computed hash: "
-							+ Hex.bytesToHexString(computedHash) +" (match!)" + "\n");
+							+ Hex.bytesToHexString(computedHash) + " (match!)" + "\n");
 				}
 				statusBar.setPAOK("Hash alg. " + digestAlgorithm);
 			} catch (Exception e) {
@@ -565,7 +564,7 @@ public class Reader extends JFrame implements ActionListener, APDUListener {
 			X509Certificate docSigningCert = sodFile.getDocSigningCertificate();
 			if (sodFile.checkDocSignature(docSigningCert)) {
 				//statusBar.setDSOK("sig. alg. "
-						//+ sodFile.getDigestEncryptionAlgorithm());
+				//+ sodFile.getDigestEncryptionAlgorithm());
 			} else {
 				//statusBar.setDSFail("DS Signature incorrect");
 			}
@@ -577,8 +576,9 @@ public class Reader extends JFrame implements ActionListener, APDUListener {
 
 	// Make the COM file contents human readable
 	private String formatComFile() {
-		if (comFile == null)
+		if (comFile == null) {
 			return NONE;
+		}
 		List<Integer> list = comFile.getDGNumbers();
 		String result = "Data groups:";
 		for (Integer i : list) {

@@ -77,14 +77,13 @@ import org.ejbca.cvc.CVCertificate;
 
 /**
  * A simple GUI application for creating SmartID
- * 
+ *
  * @author Qingbao Guo
  */
 public class Writer extends JFrame implements ActionListener, APDUListener,
 		ChangeListener, CardListener {
 
 	// Constants for input event handling:
-
 	private static final String LOADCERT = "loadcert";
 
 	private static final String CLEARCERT = "clearcert";
@@ -155,7 +154,7 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 
 	/**
 	 * Construct the main GUI frame.
-	 * 
+	 *
 	 */
 	public Writer() {
 		super("Smart ID Maker");
@@ -234,7 +233,6 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 		tabbedPane.add("Data", Panel);
 
 		// Security things:
-
 		JPanel certPanel = new JPanel();
 		certPanel.setLayout(new GridBagLayout());
 		c = new GridBagConstraints();
@@ -441,7 +439,7 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 			JOptionPane.showMessageDialog(
 					this,
 					"Could not create an empty card, will exit. ("
-							+ e.getClass() + ")");
+					+ e.getClass() + ")");
 			System.exit(1);
 		}
 
@@ -562,7 +560,7 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 				String emtry = DataPanel.getValue("emtry");
 				smartID.putFile(BasicService.EF_DG3,
 						new DG_3_FILE(emtry).getEncoded(), eacDG3.isEnabled()
-								&& eacDG3.isSelected());
+						&& eacDG3.isSelected());
 			} catch (NumberFormatException nfe) {
 				nfe.printStackTrace();
 			}
@@ -578,7 +576,7 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 					BasicService.EF_DG4,
 					new DG_4_FILE(fingerprint.getImage(), fingerprint
 							.getMimeType()).getEncoded(), eacDG4.isEnabled()
-							&& eacDG4.isSelected());
+					&& eacDG4.isSelected());
 		}
 
 		try {
@@ -633,7 +631,7 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 	/**
 	 * Upload the SmartID based on the data in the GUI. Note: there is very
 	 * little checks done on the presence of the (possibly required) data.
-	 * 
+	 *
 	 */
 	private void uploadSmartID() {
 		collectData();
@@ -655,66 +653,66 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 				.setFileFilter(net.sourceforge.scuba.util.Files.ZIP_FILE_FILTER);
 		int choice = fileChooser.showSaveDialog(getContentPane());
 		switch (choice) {
-		case JFileChooser.APPROVE_OPTION:
-			try {
-				File file = fileChooser.getSelectedFile();
-				FileOutputStream fileOut = new FileOutputStream(file);
-				ZipOutputStream zipOut = new ZipOutputStream(fileOut);
-				for (short fid : smartID.getFileList()) {
-					String eac = "";
-					if ((fid == BasicService.EF_DG3 && eacDG3.isSelected())
-							|| (fid == BasicService.EF_DG4 && eacDG4
-									.isSelected())) {
-						eac = "eac";
+			case JFileChooser.APPROVE_OPTION:
+				try {
+					File file = fileChooser.getSelectedFile();
+					FileOutputStream fileOut = new FileOutputStream(file);
+					ZipOutputStream zipOut = new ZipOutputStream(fileOut);
+					for (short fid : smartID.getFileList()) {
+						String eac = "";
+						if ((fid == BasicService.EF_DG3 && eacDG3.isSelected())
+								|| (fid == BasicService.EF_DG4 && eacDG4
+								.isSelected())) {
+							eac = "eac";
+						}
+						String entryName = Hex.shortToHexString(fid) + eac + ".bin";
+						InputStream dg = smartID.getInputStream(fid);
+						zipOut.putNextEntry(new ZipEntry(entryName));
+						int bytesRead;
+						byte[] dgBytes = new byte[1024];
+						while ((bytesRead = dg.read(dgBytes)) > 0) {
+							zipOut.write(dgBytes, 0, bytesRead);
+						}
+						zipOut.closeEntry();
 					}
-					String entryName = Hex.shortToHexString(fid) + eac + ".bin";
-					InputStream dg = smartID.getInputStream(fid);
-					zipOut.putNextEntry(new ZipEntry(entryName));
-					int bytesRead;
-					byte[] dgBytes = new byte[1024];
-					while ((bytesRead = dg.read(dgBytes)) > 0) {
-						zipOut.write(dgBytes, 0, bytesRead);
+					byte[] keySeed = smartID.getKeySeed();
+					if (keySeed != null) {
+						String entryName = "keyseed.bin";
+						zipOut.putNextEntry(new ZipEntry(entryName));
+						zipOut.write(keySeed);
+						zipOut.closeEntry();
 					}
-					zipOut.closeEntry();
+					PrivateKey aaPrivateKey = smartID.getAAPrivateKey();
+					if (aaPrivateKey != null) {
+						String entryName = "aaprivatekey.der";
+						zipOut.putNextEntry(new ZipEntry(entryName));
+						zipOut.write(aaPrivateKey.getEncoded());
+						zipOut.closeEntry();
+					}
+					PrivateKey caPrivateKey = smartID.getEACPrivateKey();
+					if (caPrivateKey != null) {
+						String entryName = "caprivatekey.der";
+						zipOut.putNextEntry(new ZipEntry(entryName));
+						zipOut.write(caPrivateKey.getEncoded());
+						zipOut.closeEntry();
+					}
+					CVCertificate cvCert = smartID.getCVCertificate();
+					if (cvCert != null) {
+						String entryName = "cacert.cvcert";
+						zipOut.putNextEntry(new ZipEntry(entryName));
+						zipOut.write(cvCert.getDEREncoded());
+						zipOut.closeEntry();
+					}
+					zipOut.finish();
+					zipOut.close();
+					fileOut.flush();
+					fileOut.close();
+					break;
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-				byte[] keySeed = smartID.getKeySeed();
-				if (keySeed != null) {
-					String entryName = "keyseed.bin";
-					zipOut.putNextEntry(new ZipEntry(entryName));
-					zipOut.write(keySeed);
-					zipOut.closeEntry();
-				}
-				PrivateKey aaPrivateKey = smartID.getAAPrivateKey();
-				if (aaPrivateKey != null) {
-					String entryName = "aaprivatekey.der";
-					zipOut.putNextEntry(new ZipEntry(entryName));
-					zipOut.write(aaPrivateKey.getEncoded());
-					zipOut.closeEntry();
-				}
-				PrivateKey caPrivateKey = smartID.getEACPrivateKey();
-				if (caPrivateKey != null) {
-					String entryName = "caprivatekey.der";
-					zipOut.putNextEntry(new ZipEntry(entryName));
-					zipOut.write(caPrivateKey.getEncoded());
-					zipOut.closeEntry();
-				}
-				CVCertificate cvCert = smartID.getCVCertificate();
-				if (cvCert != null) {
-					String entryName = "cacert.cvcert";
-					zipOut.putNextEntry(new ZipEntry(entryName));
-					zipOut.write(cvCert.getDEREncoded());
-					zipOut.closeEntry();
-				}
-				zipOut.finish();
-				zipOut.close();
-				fileOut.flush();
-				fileOut.close();
+			default:
 				break;
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		default:
-			break;
 		}
 	}
 
@@ -724,20 +722,20 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 				.setFileFilter(net.sourceforge.scuba.util.Files.ZIP_FILE_FILTER);
 		int choice = fileChooser.showOpenDialog(getContentPane());
 		switch (choice) {
-		case JFileChooser.APPROVE_OPTION:
-			try {
-				if (privateKey != null) {
-					smartID = new SmartID(fileChooser.getSelectedFile(), true,
-							new SimpleDocumentSigner(privateKey));
-				} else {
-					smartID = new SmartID(fileChooser.getSelectedFile());
+			case JFileChooser.APPROVE_OPTION:
+				try {
+					if (privateKey != null) {
+						smartID = new SmartID(fileChooser.getSelectedFile(), true,
+								new SimpleDocumentSigner(privateKey));
+					} else {
+						smartID = new SmartID(fileChooser.getSelectedFile());
+					}
+					processData();
+				} catch (IOException ioe) {
+					ioe.printStackTrace();
 				}
-				processData();
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
-			}
-		default:
-			break;
+			default:
+				break;
 		}
 	}
 
@@ -804,8 +802,9 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 
 	private void loadCertificate() {
 		File f = GUIutil.getFile(this, "Load Certificate", false);
-		if (f == null)
+		if (f == null) {
 			return;
+		}
 		certificate = Files.readCertFromFile(f);
 		if (certificate != null) {
 			cert.setText(certificate.getIssuerDN().getName());
@@ -832,8 +831,9 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 
 	private void loadKey() {
 		File f = GUIutil.getFile(this, "Load Key", false);
-		if (f == null)
+		if (f == null) {
 			return;
+		}
 		privateKey = (RSAPrivateKey) Files.readRSAPrivateKeyFromFile(f);
 		if (privateKey != null) {
 			key.setText(privateKey.getAlgorithm() + " "
@@ -884,9 +884,8 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 
 	/**
 	 * Build up the frame and start up the application.
-	 * 
-	 * @param args
-	 *            should be none (ignored)
+	 *
+	 * @param args should be none (ignored)
 	 */
 	public static void main(String[] args) {
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
@@ -923,8 +922,9 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 			persoService = null;
 		}
 		if (persoService != null) {
-			if (uploadItem != null)
+			if (uploadItem != null) {
 				uploadItem.setEnabled(true);
+			}
 		}
 
 	}
@@ -933,8 +933,9 @@ public class Writer extends JFrame implements ActionListener, APDUListener,
 	public void SmartIDCardRemoved(CardActionEvents ce) {
 		System.out.println("Removed SmartID card.");
 		persoService = null;
-		if (uploadItem != null)
+		if (uploadItem != null) {
 			uploadItem.setEnabled(false);
+		}
 
 	}
 

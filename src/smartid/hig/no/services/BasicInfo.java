@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package smartid.hig.no.services;
 
@@ -7,13 +7,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import net.sourceforge.scuba.util.Hex;
-
 /**
  * Encapsulates basic info, i.e. DG1
- * 
  *
- * 
+ *
+ *
  */
 public class BasicInfo {
 
@@ -54,12 +52,10 @@ public class BasicInfo {
 
 	/**
 	 * Constructs a new file based on data in <code>in</code>.
-	 * 
-	 * @param in
-	 *            the input stream to be decoded
-	 * 
-	 * @throws IOException
-	 *             if decoding fails
+	 *
+	 * @param in the input stream to be decoded
+	 *
+	 * @throws IOException if decoding fails
 	 */
 	public BasicInfo(InputStream in) throws IOException {
 		int len = 0;
@@ -89,7 +85,7 @@ public class BasicInfo {
 		t = new byte[len];
 		in.read(t);
 		pob = new String(t);
-		
+
 		len = in.read();
 		t = new byte[len];
 		in.read(t);
@@ -127,8 +123,8 @@ public class BasicInfo {
 	 * Gets the encoded version of this file.
 	 */
 	public byte[] getEncoded() {
-		String[] data = { sur, given, gender, dob, pob, issue, expriy, country,
-				authority, id};
+		String[] data = {sur, given, gender, dob, pob, issue, expriy, country,
+			authority, id};
 		int total = 0;
 		for (String s : data) {
 			total += s.length() + 1;
